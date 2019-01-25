@@ -1,0 +1,40 @@
+def WORKSPACE_DIR = env.WORKSPACE
+pipeline {
+     agent none
+  
+     
+     stages {
+         stage('Build') {
+             agent any
+             
+		     steps{
+                 bat 'mvn clean package'
+		 	 }
+		     post {
+		         success {
+                   
+   	                 echo 'Now Archiving...'
+		            archiveArtifacts artifacts: '**/target/*.jar'
+                    archiveArtifacts artifacts: '**/target/*.war'
+                     
+		         }
+		     }
+		 }
+         stage('publish') {
+             agent any
+             steps{
+                 nexusArtifactUploader artifacts: [[artifactId: 'EnvironmentUpdateToolCore', classifier: '', file: "${WORKSPACE_DIR}/EnvironmentUpdateToolCore/target/EnvironmentUpdateToolCore.jar", type: 'jar', type: 'jar'],
+                                               [artifactId: 'EnvironmentUpdateToolCore', classifier: '', file: "${WORKSPACE_DIR}/EnvironmentUpdateToolSchedulerFrontEnd/target/*.war", type: 'war', type: 'war']], 
+                 credentialsId: '39b46102-1482-4332-bbf2-e65182eea743',
+                 groupId: 'com.benefitfocus',
+                 nexusUrl: 'nexus.benefitfocus.com:8888/nexus', 
+                 nexusVersion: 'nexus2',
+                 protocol: 'http', 
+                 repository: 'bf-snapshots',
+                 version: '1.0-SNAPSHOT'
+		     }
+		 }
+    }
+}
+
+			l
